@@ -1,13 +1,16 @@
 import { useMemo, useState } from 'react';
 import { useContent, useTexts } from '../content/ContentContext';
 import { SectionHeading } from './ui';
+import Icon from './Icon';
+import { projectSlug } from '../data/site';
+import { linkClick, projectPath } from '../utils/router';
 
 /** Lightweight CSS mockup instead of heavy screenshots — keeps the page fast. */
-function Mockup({ kind, accent }) {
+export function Mockup({ kind, accent, className = '' }) {
   const style = { '--a1': accent[0], '--a2': accent[1] };
   if (kind === 'mobile') {
     return (
-      <div className="mock mock--mobile" style={style} aria-hidden="true">
+      <div className={`mock mock--mobile ${className}`} style={style} aria-hidden="true">
         <div className="mock__phone">
           <span className="mock__bar" />
           <span className="mock__hero" />
@@ -19,7 +22,7 @@ function Mockup({ kind, accent }) {
     );
   }
   return (
-    <div className={`mock mock--${kind}`} style={style} aria-hidden="true">
+    <div className={`mock mock--${kind} ${className}`} style={style} aria-hidden="true">
       <div className="mock__browser">
         <span className="mock__dots"><i /><i /><i /></span>
         <div className="mock__body">
@@ -74,19 +77,33 @@ export default function Projects() {
         </div>
 
         <div className="projects" aria-live="polite">
-          {list.map((p, i) => (
-            <article key={`${p.title}-${i}`} className="project-card">
-              <Mockup kind={p.kind || 'site'} accent={p.accent?.length === 2 ? p.accent : ['#d4a845', '#3b2a0a']} />
-              <div className="project-card__body">
-                <span className="project-card__cat">{p.category}</span>
-                <h3>{p.title}</h3>
-                <p>{p.text}</p>
-                <ul className="tags" aria-label="Technologies">
-                  {(p.tags || []).map((t) => <li key={t}>{t}</li>)}
-                </ul>
-              </div>
-            </article>
-          ))}
+          {list.map((p, i) => {
+            const href = projectPath(projectSlug(p));
+            return (
+              <article key={`${p.title}-${i}`} className="project-card">
+                {p.cover ? (
+                  <div className="project-card__media">
+                    <img src={p.cover} alt="" loading="lazy" decoding="async" width="640" height="420" />
+                  </div>
+                ) : (
+                  <Mockup kind={p.kind || 'site'} accent={p.accent?.length === 2 ? p.accent : ['#d4a845', '#3b2a0a']} />
+                )}
+                <div className="project-card__body">
+                  <span className="project-card__cat">{p.category}</span>
+                  <h3>
+                    <a href={href} onClick={linkClick} className="project-card__link">{p.title}</a>
+                  </h3>
+                  <p>{p.text}</p>
+                  <ul className="tags" aria-label="Technologies">
+                    {(p.tags || []).map((t) => <li key={t}>{t}</li>)}
+                  </ul>
+                  <span className="project-card__more" aria-hidden="true">
+                    View case study <Icon name="arrow" size={16} />
+                  </span>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </div>
     </section>

@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as store from './store.js';
+import { projectSlug } from '../src/data/site.js';
 import {
   ensureAdmin, checkPassword, setCredentials, issueSession, clearSession, currentAdmin, requireAdmin, publicAdmin,
   DEFAULT_USER, DEFAULT_PASSWORD,
@@ -96,12 +97,78 @@ function validateSection(name, data) {
     }
   }
   if (['services', 'projects'].includes(name) && data.some((i) => !i?.title)) return 'Every item needs a title.';
+  if (name === 'projects') {
+    // Each project gets a unique URL name for its /projects/<slug> page.
+    const used = new Set();
+    for (const p of data) {
+      let slug = projectSlug(p) || 'project';
+      for (let n = 2; used.has(slug); n++) slug = `${projectSlug(p) || 'project'}-${n}`;
+      used.add(slug);
+      p.slug = slug;
+      if (p.liveUrl && !/^https?:\/\/\S+$/.test(p.liveUrl)) return `Live demo link for “${p.title}” must start with https://`;
+      const images = [p.cover, ...(Array.isArray(p.gallery) ? p.gallery : [])].filter(Boolean);
+      if (images.some((u) => typeof u !== 'string' || !/^(https?:\/\/|\/)\S+$/.test(u))) {
+        return `Image links for “${p.title}” must start with https:// or /`;
+      }
+    }
+  }
   if (name === 'stats' && data.some((s) => !s?.value || !s?.label)) return 'Every stat needs a value and a label.';
   if (name === 'budgets' && data.some((b) => typeof b !== 'string' || !b)) return 'Budgets must be text.';
   return null;
 }
 
 const ENQUIRY_STATUSES = ['new', 'contacted', 'closed'];
+
+/* ---------------- testimonials ---------------- */
+
+const IMAGE_MAX_BYTES = 200 * 1024; // the admin panel resizes photos to ~30–60 KB before upload
+const IMAGE_SIGNATURES = {
+  'image/jpeg': (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
+  'image/png': (b) => b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+  'image/webp': (b) => b.subarray(0, 4).toString('latin1') === 'RIFF' && b.subarray(8, 12).toString('latin1') === 'WEBP',
+};
+
+/** Parses a data: URL into { data, type }. Returns a string message when it is not an acceptable image. */
+function parseImage(value) {
+  const m = typeof value === 'string' && /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(value);
+  if (!m) return 'Photo must be a JPG, PNG or WebP image.';
+  const data = Buffer.from(m[2], 'base64');
+  if (data.length > IMAGE_MAX_BYTES) return 'Photo is too large (max 200 KB after resizing).';
+  if (!IMAGE_SIGNATURES[m[1]](data)) return 'Photo file looks damaged or is not a real image.';
+  return { data, type: m[1] };
+}
+
+/**
+ * Validates a testimonial body. With `partial`, only the fields present are checked (for edits).
+ * Returns { error } or { value } ready for the store.
+ */
+function readTestimonial(b, { partial = false } = {}) {
+  const v = {};
+  const has = (k) => !partial || b[k] !== undefined;
+  if (has('name')) {
+    v.name = str(b.name, 100);
+    if (v.name.length < 2) return { error: 'Customer name is required.' };
+  }
+  if (has('designation')) v.designation = str(b.designation, 100);
+  if (has('company')) v.company = str(b.company, 100);
+  if (has('rating')) {
+    v.rating = Math.round(Number(b.rating));
+    if (!(v.rating >= 1 && v.rating <= 5)) return { error: 'Rating must be between 1 and 5 stars.' };
+  }
+  if (has('review')) {
+    v.review = str(b.review, 1500);
+    if (v.review.length < 10) return { error: 'Review text is too short (at least 10 characters).' };
+  }
+  if (b.active !== undefined || !partial) v.active = b.active === undefined ? true : !!b.active;
+  if (b.image === null || b.image === '') v.image = null;
+  else if (b.image !== undefined) {
+    const img = parseImage(b.image);
+    if (typeof img === 'string') return { error: img };
+    v.image = img;
+  }
+  return { value: v };
+}
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /* ---------------- public API ---------------- */
 
@@ -134,6 +201,26 @@ app.post(
     res.status(201).json({ ok: true });
   })
 );
+
+// Only active testimonials, in display order.
+app.get('/api/testimonials', wrap(async (req, res) => {
+  res.set('Cache-Control', 'no-cache');
+  res.json(await store.listTestimonials({ activeOnly: true }));
+}));
+
+// Profile photo. URLs carry a version (?v=) that changes with the photo, so active photos are cached for good.
+// Photos of inactive testimonials are only visible to the admin.
+app.get('/api/testimonials/:id/image', wrap(async (req, res) => {
+  if (!UUID_RE.test(req.params.id)) return res.status(404).end();
+  const img = await store.getTestimonialImage(req.params.id);
+  if (!img || (!img.active && !currentAdmin(req))) return res.status(404).end();
+  res.set({
+    'Content-Type': img.type,
+    'Cache-Control': img.active ? 'public, max-age=31536000, immutable' : 'private, no-store',
+    'Content-Security-Policy': "default-src 'none'",
+  });
+  res.send(img.data);
+}));
 
 /* ---------------- auth ---------------- */
 
@@ -200,6 +287,43 @@ app.delete('/api/enquiries/:id', requireAdmin, wrap(async (req, res) => {
   res.json({ ok: true });
 }));
 
+// Testimonials management (all statuses).
+app.get('/api/testimonials/manage', requireAdmin, wrap(async (req, res) => res.json(await store.listTestimonials())));
+
+app.post('/api/testimonials', requireAdmin, wrap(async (req, res) => {
+  const { error, value } = readTestimonial(req.body || {});
+  if (error) return res.status(400).json({ error });
+  res.status(201).json(await store.addTestimonial(value));
+}));
+
+app.put('/api/testimonials/order', requireAdmin, wrap(async (req, res) => {
+  const ids = req.body?.ids;
+  if (!Array.isArray(ids) || ids.length > 500 || !ids.every((id) => typeof id === 'string' && UUID_RE.test(id))) {
+    return res.status(400).json({ error: 'Invalid order.' });
+  }
+  await store.reorderTestimonials(ids);
+  res.json(await store.listTestimonials());
+}));
+
+// PUT edits the testimonial; PATCH is used for quick changes such as switching it on / off. Both accept partial bodies.
+const updateTestimonial = wrap(async (req, res) => {
+  if (!UUID_RE.test(req.params.id)) return res.status(404).json({ error: 'Testimonial not found.' });
+  const { error, value } = readTestimonial(req.body || {}, { partial: true });
+  if (error) return res.status(400).json({ error });
+  const item = await store.updateTestimonial(req.params.id, value);
+  if (!item) return res.status(404).json({ error: 'Testimonial not found.' });
+  res.json(item);
+});
+app.put('/api/testimonials/:id', requireAdmin, updateTestimonial);
+app.patch('/api/testimonials/:id', requireAdmin, updateTestimonial);
+
+app.delete('/api/testimonials/:id', requireAdmin, wrap(async (req, res) => {
+  if (!UUID_RE.test(req.params.id) || !(await store.deleteTestimonial(req.params.id))) {
+    return res.status(404).json({ error: 'Testimonial not found.' });
+  }
+  res.json({ ok: true });
+}));
+
 app.get('/api/health', wrap(async (req, res) => {
   await store.ping();
   res.json({ ok: true });
@@ -215,8 +339,9 @@ if (fs.existsSync(path.join(DIST, 'index.html'))) {
   const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
   // Puts the admin-managed SEO + business details into the HTML so search engines see them without JavaScript.
-  function renderPage() {
+  async function renderPage() {
     const content = store.getContent();
+    const testimonials = JSON.stringify(await store.listTestimonials({ activeOnly: true })).replace(/</g, '\\u003c');
     const { seo, company } = content;
     const jsonLd = JSON.stringify({
       '@context': 'https://schema.org',
@@ -238,14 +363,14 @@ if (fs.existsSync(path.join(DIST, 'index.html'))) {
       .replace(/(<meta property="og:description" content=")[^"]*/, `$1${esc(seo.description)}`)
       .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, `<script type="application/ld+json">${jsonLd}</script>`)
       // Inline the content so the page renders instantly, without waiting for /api/content.
-      .replace('</head>', `<script>window.__SONEX_CONTENT__=${json}</script></head>`);
+      .replace('</head>', `<script>window.__SONEX_CONTENT__=${json};window.__SONEX_TESTIMONIALS__=${testimonials}</script></head>`);
   }
 
-  app.get('*', (req, res) => {
+  app.get('*', wrap(async (req, res) => {
     const isAdmin = req.path.startsWith('/admin');
     if (isAdmin) res.set('X-Robots-Tag', 'noindex, nofollow');
-    res.set('Cache-Control', 'no-cache').type('html').send(isAdmin ? template : renderPage());
-  });
+    res.set('Cache-Control', 'no-cache').type('html').send(isAdmin ? template : await renderPage());
+  }));
 }
 
 app.use((err, req, res, next) => {

@@ -1,3 +1,5 @@
+import { navigate } from './router';
+
 // Link/format helpers. `c` is the `company` object from the content (see ContentContext).
 
 export const telLink = (c) => `tel:+${c.phoneIntl}`;
@@ -30,10 +32,13 @@ export function discounted(price, pct) {
   return raw >= 1000 ? Math.round(raw / 100) * 100 - 1 : Math.round(raw);
 }
 
-export function scrollToSection(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
+/** Opens a site page by its id (see NAV_LINKS), e.g. goToPage('contact') → /contact. */
+export function goToPage(id) {
+  navigate(id === 'home' ? '/' : `/${id}`);
+}
+
+/** Smoothly scrolls back to the top of the current page. */
+export function scrollToTop() {
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-  history.replaceState(null, '', `#${id}`);
+  window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
 }

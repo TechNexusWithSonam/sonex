@@ -72,6 +72,7 @@ export default function Dashboard({ content, enquiries, go, user }) {
             <button type="button" onClick={() => go('services')}>Services</button>
             <button type="button" onClick={() => go('projects')}>Projects</button>
             <button type="button" onClick={() => go('pricing')}>Pricing</button>
+            <button type="button" onClick={() => go('testimonials')}>Testimonials</button>
           </div>
         </section>
       </div>

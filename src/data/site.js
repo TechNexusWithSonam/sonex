@@ -19,13 +19,14 @@ export const COMPANY = {
   youtube: '',
 };
 
+// Site pages, in menu order. Each one has its own URL.
 export const NAV_LINKS = [
-  { id: 'home', label: 'Home' },
-  { id: 'about', label: 'About' },
-  { id: 'services', label: 'Services' },
-  { id: 'projects', label: 'Projects' },
-  { id: 'pricing', label: 'Pricing' },
-  { id: 'contact', label: 'Contact' },
+  { id: 'home', label: 'Home', path: '/' },
+  { id: 'about', label: 'About', path: '/about' },
+  { id: 'services', label: 'Services', path: '/services' },
+  { id: 'projects', label: 'Projects', path: '/projects' },
+  { id: 'pricing', label: 'Pricing', path: '/pricing' },
+  { id: 'contact', label: 'Contact', path: '/contact' },
 ];
 
 export const STATS = [
@@ -80,56 +81,270 @@ export const SERVICES = [
   },
 ];
 
+// Portfolio items. The card shows title / category / text / tags / cover;
+// the case-study page at /projects/<slug> shows everything else.
+// `highlights` use the format "value | label".
 export const PROJECTS = [
   {
+    slug: 'luxecart-store',
+    cover: '/images/projects/luxecart-store-1.jpg',
+    gallery: ['/images/projects/luxecart-store-2.jpg', '/images/projects/luxecart-store-3.jpg'],
     title: 'LuxeCart Store',
     category: 'E-commerce',
     text: 'Fashion store with product filters, wishlist, Razorpay checkout and an order dashboard.',
     tags: ['React', 'Node.js', 'Razorpay'],
     accent: ['#d4a845', '#5b3e0f'],
     kind: 'store',
+    industry: 'Fashion & apparel retail',
+    platform: 'Web store + admin panel',
+    timeline: '8 weeks',
+    year: '2025',
+    overview:
+      'LuxeCart is a direct-to-customer online store for a women’s ethnic-wear label that was selling only through Instagram DMs and two physical outlets. The store brings the full catalogue online with size-wise stock, UPI and card payments, and a back office the shop team can run without a developer.',
+    challenge:
+      'Orders were taken over Instagram and WhatsApp, payment screenshots were checked by hand and stock was tracked in a notebook. Popular sizes regularly sold twice, COD returns were eating into margins and there was no record of which customers came back.',
+    solution:
+      'We built a fast, mobile-first store with variant-level stock (size × colour), Razorpay checkout supporting UPI, cards, net-banking and wallets, and prepaid-only rules for high-return pin codes. Orders flow into an admin dashboard with Shiprocket label printing, automatic WhatsApp order updates and a customer list with lifetime value.',
+    features: [
+      'Filters by size, colour, fabric, price and occasion',
+      'Wishlist, recently viewed and “notify me when back in stock”',
+      'Razorpay checkout — UPI, cards, net-banking and wallets',
+      'Coupon engine: flat, percentage, first-order and free-shipping codes',
+      'COD restricted by pin code and order value',
+      'Shiprocket integration for AWB generation and tracking',
+      'WhatsApp + email updates for order placed, shipped and delivered',
+      'Admin dashboard with sales, top products and abandoned carts',
+      'GST-compliant tax invoices generated per order',
+      'SEO-friendly product URLs, sitemap and rich product snippets',
+    ],
+    highlights: ['1,200+ | Product variants supported', '< 2s | Page load on 4G', '6 | Payment methods', '4 | Admin roles'],
+    deliverables: [
+      'Customer-facing web store (mobile-first)',
+      'Admin panel for products, orders, coupons and customers',
+      'Razorpay & Shiprocket integration',
+      'Hosting setup, SSL and domain configuration',
+      'Training session and 30 days of free support',
+    ],
+    liveUrl: '',
   },
   {
+    slug: 'swiftbill-pos',
+    cover: '/images/projects/swiftbill-pos-1.jpg',
+    gallery: ['/images/projects/swiftbill-pos-2.jpg', '/images/projects/swiftbill-pos-3.jpg'],
     title: 'SwiftBill POS',
     category: 'Billing Software',
     text: 'Counter billing for retail shops — GST invoices, barcode scanning and day-end reports.',
     tags: ['React', 'PHP', 'MySQL'],
     accent: ['#f0d58a', '#7a5a16'],
     kind: 'dashboard',
+    industry: 'Retail & kirana stores',
+    platform: 'Web app for the counter PC',
+    timeline: '6 weeks',
+    year: '2025',
+    overview:
+      'SwiftBill is a point-of-sale and billing system designed for busy retail counters — supermarkets, kirana stores, stationery and hardware shops. A cashier can scan, bill and print a GST invoice in seconds, while the owner sees sales, credit and stock from their phone.',
+    challenge:
+      'Most small shops either bill by hand or use desktop software that is slow, hard to learn and locked to one computer. Owners cannot see daily sales without visiting the shop, customer credit (udhaar) is kept in registers, and GST filing means re-typing every bill at month end.',
+    solution:
+      'SwiftBill runs in the browser with a keyboard-first billing screen tuned for barcode scanners and thermal printers. Every bill automatically splits CGST/SGST/IGST and updates stock and the customer ledger. Day-end closing, GSTR-1 ready exports and a mobile owner dashboard remove the month-end scramble.',
+    features: [
+      'Barcode scanning with instant product lookup',
+      'Keyboard shortcuts for fast billing (no mouse needed)',
+      '58mm / 80mm thermal and A4 invoice printing',
+      'Automatic CGST, SGST and IGST calculation with HSN codes',
+      'Split payments — cash, UPI and card on one bill',
+      'Customer ledger for credit sales with SMS reminders',
+      'Hold bill / recall bill for busy counters',
+      'Returns, exchanges and credit notes',
+      'Day-end cash closing and shift-wise reports',
+      'GSTR-1 ready Excel export for your CA',
+    ],
+    highlights: ['~8s | Average bill time', '3 | Tax types handled', '50k+ | Items per store', '0 | New hardware needed'],
+    deliverables: [
+      'Billing / POS web application',
+      'Owner dashboard (mobile friendly)',
+      'Printer and barcode scanner setup',
+      'Product import from Excel',
+      'On-site staff training',
+    ],
+    liveUrl: '',
   },
   {
+    slug: 'stockpilot',
+    cover: '/images/projects/stockpilot-1.jpg',
+    gallery: ['/images/projects/stockpilot-2.jpg', '/images/projects/stockpilot-3.jpg'],
     title: 'StockPilot',
     category: 'Inventory',
     text: 'Multi-warehouse inventory with stock transfers, purchase orders and low-stock alerts.',
     tags: ['Laravel', 'Vue', 'Charts'],
     accent: ['#c99a3a', '#3b2a0a'],
     kind: 'dashboard',
+    industry: 'Distribution & wholesale',
+    platform: 'Web app + Android scanner app',
+    timeline: '10 weeks',
+    year: '2024',
+    overview:
+      'StockPilot is an inventory management system for distributors running multiple godowns. It tracks every item by batch, expiry and location, manages purchases from suppliers and transfers between warehouses, and warns the team before anything runs out.',
+    challenge:
+      'Stock lived in Excel sheets updated once a day by each godown. Transfers were not recorded properly, expired stock was discovered too late, and purchase decisions were based on guesswork — leading to both dead stock and frequent “out of stock” calls from retailers.',
+    solution:
+      'We built a central inventory system with real-time stock per warehouse and bin location. Godown staff use an Android app to scan items in and out, purchase orders are raised from suggested re-order levels, and dashboards show slow-moving and near-expiry items so they can be cleared in time.',
+    features: [
+      'Real-time stock across multiple warehouses',
+      'Batch, expiry date and bin-location tracking',
+      'Inter-warehouse stock transfers with approval',
+      'Purchase orders, GRN and supplier management',
+      'Re-order level suggestions based on sales velocity',
+      'Low-stock and near-expiry alerts on email and WhatsApp',
+      'Barcode / QR scanning from the Android app',
+      'Stock audit mode with variance report',
+      'Valuation reports — FIFO and weighted average',
+      'Role-based access for owner, manager and godown staff',
+    ],
+    highlights: ['5 | Warehouses in one view', '3 | User roles', '15+ | Built-in reports', '0 | Manual Excel updates'],
+    deliverables: [
+      'Inventory web application',
+      'Android scanning app',
+      'Data migration from existing Excel sheets',
+      'Cloud hosting with daily backups',
+      'Admin & staff training',
+    ],
+    liveUrl: '',
   },
   {
+    slug: 'fittrack-app',
+    cover: '/images/projects/fittrack-app-1.jpg',
+    gallery: ['/images/projects/fittrack-app-2.jpg', '/images/projects/fittrack-app-3.jpg'],
     title: 'FitTrack App',
     category: 'Mobile App',
     text: 'Gym membership app with class booking, payments and trainer schedules.',
     tags: ['React Native', 'Firebase'],
     accent: ['#e8c46a', '#4a3410'],
     kind: 'mobile',
+    industry: 'Fitness & wellness',
+    platform: 'Android & iOS app + web admin',
+    timeline: '12 weeks',
+    year: '2025',
+    overview:
+      'FitTrack is a branded mobile app for a gym chain with three branches. Members can renew plans, book group classes, check in with a QR code and follow workout plans from their trainer — while the gym manages everything from one admin panel.',
+    challenge:
+      'Membership renewals were tracked on paper and in WhatsApp groups, popular classes were overcrowded while others ran half empty, and trainers shared diet and workout plans as photos that members quickly lost.',
+    solution:
+      'We built a cross-platform app with plan purchase and reminders before expiry, slot-based class booking with waitlists, QR check-in at the front desk and personal workout and diet plans assigned by trainers. Push notifications keep members engaged and the admin panel shows attendance, revenue and renewals due.',
+    features: [
+      'Membership plans with online renewal (UPI / cards)',
+      'Class booking with limited slots and waitlist',
+      'QR code check-in at the reception',
+      'Trainer-assigned workout and diet plans',
+      'Progress tracking — weight, measurements and photos',
+      'Push notifications for renewals, classes and offers',
+      'Multi-branch support with branch-wise reports',
+      'Personal training session scheduling',
+      'Referral codes and seasonal offers',
+      'Admin panel for members, trainers, plans and payments',
+    ],
+    highlights: ['2 | Platforms (Android & iOS)', '3 | Branches managed', '12+ | App screens', '24/7 | Self-service renewals'],
+    deliverables: [
+      'Android & iOS member app',
+      'Web admin panel for gym staff',
+      'Payment gateway integration',
+      'Play Store & App Store publishing',
+      'Launch support and 60 days of maintenance',
+    ],
+    liveUrl: '',
   },
   {
+    slug: 'prime-realty',
+    cover: '/images/projects/prime-realty-1.jpg',
+    gallery: ['/images/projects/prime-realty-2.jpg', '/images/projects/prime-realty-3.jpg'],
     title: 'Prime Realty',
     category: 'Website',
     text: 'Real-estate website with property listings, lead forms and WhatsApp enquiry buttons.',
     tags: ['Next.js', 'SEO', 'CMS'],
     accent: ['#dcb55a', '#2e220b'],
     kind: 'site',
+    industry: 'Real estate',
+    platform: 'Website + listing CMS',
+    timeline: '5 weeks',
+    year: '2024',
+    overview:
+      'Prime Realty is a lead-generation website for a real-estate consultancy dealing in residential flats, plots and commercial spaces. Every listing has its own search-optimised page, photo gallery, location map and one-tap WhatsApp enquiry.',
+    challenge:
+      'The consultancy relied on property portals where they paid per lead and competed with dozens of other brokers on the same listing. Their old website was a single static page that did not show up on Google and could not be updated without a developer.',
+    solution:
+      'We built a fast, search-optimised site with a simple CMS so the team can add a property in minutes. Smart filters, locality pages (e.g. “2 BHK flats in Vijay Nagar”) and WhatsApp-first enquiry buttons turn search traffic into direct leads, which land in a lead inbox with source tracking.',
+    features: [
+      'Property listings with gallery, floor plans and video tour',
+      'Filters by city, locality, budget, BHK and property type',
+      'Auto-generated SEO pages for each locality',
+      'One-tap WhatsApp and call buttons on every listing',
+      'Site-visit booking form with preferred date and time',
+      'EMI calculator and price-per-sq.ft. display',
+      'Lead inbox with source tracking (Google, Facebook, direct)',
+      'Easy CMS — add, edit or mark a property as sold',
+      'Google Maps location and nearby landmarks',
+      'Schema markup for rich search results',
+    ],
+    highlights: ['95+ | Lighthouse SEO score', '< 1.5s | Largest contentful paint', '300+ | Listings capacity', '1-tap | WhatsApp enquiry'],
+    deliverables: [
+      'Responsive marketing website',
+      'Property listing CMS',
+      'On-page SEO setup and Google Search Console',
+      'Google Business Profile optimisation',
+      'Content upload for the first 50 listings',
+    ],
+    liveUrl: '',
   },
   {
+    slug: 'clinicdesk',
+    cover: '/images/projects/clinicdesk-1.jpg',
+    gallery: ['/images/projects/clinicdesk-2.jpg', '/images/projects/clinicdesk-3.jpg'],
     title: 'ClinicDesk',
     category: 'Custom Software',
     text: 'Clinic management — appointments, patient records, prescriptions and SMS reminders.',
     tags: ['React', 'API', 'SMS'],
     accent: ['#f5df9e', '#6b4d12'],
     kind: 'dashboard',
+    industry: 'Healthcare clinics',
+    platform: 'Web app for reception & doctors',
+    timeline: '9 weeks',
+    year: '2025',
+    overview:
+      'ClinicDesk is a clinic management system for multi-doctor OPD clinics. It handles appointment booking, patient history, digital prescriptions and billing in one place, and sends automatic SMS and WhatsApp reminders so fewer patients miss their visit.',
+    challenge:
+      'Reception staff juggled a paper appointment register and phone calls, patient files were hard to find on repeat visits, and doctors wrote prescriptions by hand. No-shows were common and there was no easy way to see daily collections per doctor.',
+    solution:
+      'We built a fast reception screen with token-based queues and online booking, a doctor view with complete patient history, and a prescription writer with saved templates and a medicine database. Reminders go out automatically and the owner gets daily collection and footfall reports.',
+    features: [
+      'Online and walk-in appointment booking with token queue',
+      'Doctor-wise schedules, leaves and slot durations',
+      'Complete patient history — visits, vitals and reports',
+      'Digital prescription with templates and medicine search',
+      'Printable prescription on clinic letterhead',
+      'SMS & WhatsApp reminders before appointments',
+      'OPD billing with consultation and procedure charges',
+      'Upload lab reports and X-rays to the patient file',
+      'Daily collection and footfall reports per doctor',
+      'Role-based access with secure patient data',
+    ],
+    highlights: ['4 | Doctors on one system', '< 30s | Patient lookup to prescription', '2 | Reminder channels', '100% | HTTPS-encrypted data'],
+    deliverables: [
+      'Clinic management web app',
+      'Online booking page for patients',
+      'SMS / WhatsApp gateway integration',
+      'Prescription & invoice print layouts',
+      'Staff training and onboarding',
+    ],
+    liveUrl: '',
   },
 ];
+
+/** URL-safe slug, e.g. "LuxeCart Store" → "luxecart-store". */
+export const slugify = (s) =>
+  String(s || '').toLowerCase().normalize('NFKD').replace(/[^\w\s-]/g, '').trim().replace(/[\s_]+/g, '-').replace(/-+/g, '-');
+
+/** A project's URL slug — the saved slug, else one made from the title. */
+export const projectSlug = (p) => slugify(p.slug) || slugify(p.title);
 
 // Prices in INR. `price` is the regular price; discounted price is computed from COMPANY.launchDiscount.
 export const PLANS = [
@@ -225,6 +440,7 @@ export const TEXTS = {
   projectsTitle: 'Work that',
   projectsAccent: 'speaks for itself.',
   projectsText: 'A selection of demo projects showing the kind of products we design and build.',
+  projectNote: 'Demo project built to showcase our capabilities. Figures describe the product’s scope; client details are illustrative.',
 
   pricingEyebrow: 'Pricing',
   pricingTitle: 'Simple packages,',
@@ -234,6 +450,11 @@ export const TEXTS = {
   pricingRibbon: 'Most Popular',
   pricingNote: 'Prices exclude domain, hosting and third-party fees. Final quote depends on scope.',
   pricingOfferNote: 'Launch offer valid for a limited time.',
+
+  testimonialsEyebrow: 'Testimonials',
+  testimonialsTitle: 'What our clients',
+  testimonialsAccent: 'say about us.',
+  testimonialsText: 'Real feedback from business owners we have helped go digital.',
 
   ctaTitle: 'Ready to go digital?',
   ctaAccentOffer: 'Save {discount}% today.',
@@ -337,8 +558,30 @@ export function mergeContent(data) {
       ? { ...def, ...value }
       : value;
   }
+  if (Array.isArray(out.projects)) out.projects = out.projects.map(withProjectDefaults);
   return out;
 }
+
+const PROJECT_BLANK = {
+  slug: '', cover: '', gallery: [], industry: '', platform: '', timeline: '', year: '',
+  overview: '', challenge: '', solution: '', features: [], highlights: [], deliverables: [], liveUrl: '',
+};
+
+/**
+ * Projects saved before the case-study fields existed only have the card fields.
+ * Fill each missing field from the built-in project with the same slug/title (or a blank).
+ */
+function withProjectDefaults(p) {
+  if (!p || typeof p !== 'object') return p;
+  const slug = projectSlug(p);
+  const def = PROJECTS.find((d) => d.slug === slug || d.title === p.title) || PROJECT_BLANK;
+  const out = { ...p };
+  for (const key of Object.keys(PROJECT_BLANK)) if (out[key] === undefined) out[key] = copyValue(def[key] ?? PROJECT_BLANK[key]);
+  out.slug = slug;
+  return out;
+}
+
+const copyValue = (v) => (Array.isArray(v) ? [...v] : v);
 
 /** Replaces {discount} and {name} placeholders in admin-editable text. */
 export const fillText = (text, company) =>

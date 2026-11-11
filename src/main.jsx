@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import { ContentProvider } from './content/ContentContext';
 import './index.css';
+import './styles/project-detail.css';
+import './styles/pages.css';
 
 // The admin panel is a separate, lazily-loaded bundle so visitors never download it.
 const AdminApp = lazy(() => import('./admin/AdminApp'));

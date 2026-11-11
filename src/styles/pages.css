@@ -1,0 +1,18 @@
+/* ---------- Inner page banner (About, Services, Projects, Pricing, Contact) ---------- */
+.page-hero {
+  position: relative; overflow: hidden; color: var(--white);
+  background: radial-gradient(120% 120% at 85% 0%, #1d1a12 0%, var(--black) 60%);
+  padding: calc(var(--nav-h) + clamp(40px, 7vw, 84px)) 0 clamp(44px, 6vw, 72px);
+  border-bottom: 1px solid var(--line-dark);
+}
+.page-hero__glow {
+  position: absolute; width: 520px; height: 520px; right: -140px; top: -180px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(212, 168, 69, 0.22), transparent 65%);
+  filter: blur(20px); pointer-events: none;
+}
+.page-hero__inner { position: relative; }
+.page-hero h1 {
+  font-family: var(--font-display); font-weight: 600; line-height: 1.05;
+  font-size: clamp(2.4rem, 6vw, 4rem); margin: 0 0 0.8rem;
+}
+.page-hero p { color: var(--muted-dark); font-size: clamp(1rem, 1.6vw, 1.12rem); max-width: 620px; margin: 0; }

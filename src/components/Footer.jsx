@@ -3,7 +3,8 @@ import { NAV_LINKS } from '../data/site';
 import { useContent, useCompany, useTexts } from '../content/ContentContext';
 import { Logo } from './Navbar';
 import Icon, { WhatsAppIcon } from './Icon';
-import { telLink, mailLink, whatsappLink, scrollToSection } from '../utils/links';
+import { telLink, mailLink, whatsappLink, scrollToTop } from '../utils/links';
+import { linkClick } from '../utils/router';
 import { CallNowButton, QuoteButton } from './ui';
 
 export function CtaBand() {
@@ -42,7 +43,7 @@ export function FloatingActions() {
       <button
         type="button"
         className={`fab__btn fab__btn--top ${show ? 'is-shown' : ''}`}
-        onClick={() => scrollToSection('home')}
+        onClick={scrollToTop}
         aria-label="Back to top"
         tabIndex={show ? 0 : -1}
       >
@@ -67,10 +68,6 @@ export default function Footer() {
     ["LinkedIn", c.linkedin],
     ["YouTube", c.youtube],
   ].filter(([, url]) => /^https?:\/\//.test(url || ""));
-  const go = (e, id) => {
-    e.preventDefault();
-    scrollToSection(id);
-  };
   return (
     <footer className="footer">
       <div className="container footer__grid">
@@ -89,7 +86,7 @@ export default function Footer() {
           <h3>Company</h3>
           <ul>
             {NAV_LINKS.map((l) => (
-              <li key={l.id}><a href={`#${l.id}`} onClick={(e) => go(e, l.id)}>{l.label}</a></li>
+              <li key={l.id}><a href={l.path} onClick={linkClick}>{l.label}</a></li>
             ))}
           </ul>
         </nav>
@@ -97,7 +94,7 @@ export default function Footer() {
           <h3>Services</h3>
           <ul>
             {services.slice(0, 6).map((s) => (
-              <li key={s.title}><a href="#services" onClick={(e) => go(e, 'services')}>{s.title}</a></li>
+              <li key={s.title}><a href="/services" onClick={linkClick}>{s.title}</a></li>
             ))}
           </ul>
         </div>

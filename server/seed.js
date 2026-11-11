@@ -3,8 +3,10 @@
 //   npm run seed                                  → local DB (.env)
 //   npm run seed -- --env .env.live               → live Hostinger DB
 //   options:  --user <name>  --password <pass>  --new-password  --reset-content  --no-demo
+//             --show-samples (sample testimonials active)  --reset-samples (replace sample testimonials)
 import './env.js';
 import crypto from 'node:crypto';
+import fs from 'node:fs/promises';
 import * as store from './store.js';
 import { setCredentials } from './auth.js';
 import { DEFAULT_CONTENT } from '../src/data/site.js';
@@ -31,6 +33,20 @@ const DEMO_ENQUIRIES = [
   { name: 'Vikram Singh', phone: '8899776655', email: 'vikram@example.com', service: 'Inventory Management', budget: '₹35,000 – ₹75,000', message: 'We have 2 warehouses and need stock tracking with purchase orders and low-stock alerts.', status: 'closed', notes: 'Project confirmed. Advance received.', createdAt: hoursAgo(120) },
   { name: 'Neha Joshi', phone: '7766554433', email: '', service: 'API Integrations', budget: 'Not sure yet', message: 'Want to connect our website orders with WhatsApp notifications and Shiprocket.', status: 'new', createdAt: hoursAgo(170) },
 ];
+
+// Example testimonials with illustrated avatars (server/seed-assets/testimonials/*.png).
+// These are NOT real customer reviews. They are seeded INACTIVE by default so they never appear on the
+// live website by accident; pass --show-samples to seed them active (e.g. for a local preview or demo).
+// Replace them with genuine feedback before switching them on in production.
+const SAMPLE_TESTIMONIALS = [
+  { photo: 'rajesh-kumar', name: 'Rajesh Kumar', designation: 'Owner', company: 'Kumar Medicals', rating: 5, review: 'Our GST billing used to take ages at the counter. With the new billing software a bill is done in seconds, stock updates on its own and I can see the day’s sales on my phone. The team trained my staff patiently and still answers on WhatsApp within minutes.' },
+  { photo: 'anjali-mehta', name: 'Anjali Mehta', designation: 'Founder', company: 'Studio Aura', rating: 5, review: 'They understood our brand from the first call. The website looks premium, loads fast on mobile and we started getting enquiries through WhatsApp in the very first week.' },
+  { photo: 'deepak-rao', name: 'Deepak Rao', designation: 'Operations Head', company: 'Rao Distributors', rating: 4, review: 'Tracking stock across two warehouses was a daily headache. The inventory system shows everything in real time and the low-stock alerts have stopped us running out of fast-moving items.' },
+  { photo: 'priya-nair', name: 'Dr. Priya Nair', designation: 'Director', company: 'Nair Family Clinic', rating: 5, review: 'Appointments, patient history and prescriptions are now in one place. Automatic reminders have noticeably cut down no-shows, and the reception team picked it up in a single day.' },
+  { photo: 'arjun-singh', name: 'Arjun Singh', designation: 'Co-founder', company: 'FitZone Gyms', rating: 5, review: 'Our members love the app — booking classes and renewing plans takes a few taps. Clear milestones, weekly updates and the launch happened exactly on the promised date.' },
+  { photo: 'neha-kapoor', name: 'Neha Kapoor', designation: 'Owner', company: 'The Saree House', rating: 5, review: 'Moving from Instagram DMs to a proper online store was the best decision for our business. Payments, shipping and order updates all just work, and the admin panel is easy for my team.' },
+];
+const SAMPLE_DIR = new URL('./seed-assets/testimonials/', import.meta.url);
 
 try {
   await store.init(); // creates tables + fills any missing content sections
@@ -66,6 +82,25 @@ try {
       console.log(`  ✓ ${DEMO_ENQUIRIES.length} sample enquiries added`);
     } else {
       console.log('  • Enquiries already exist — sample enquiries skipped');
+    }
+    if (flag('reset-samples')) {
+      // Removes previously seeded samples (current and older "Sample — …" names) before adding them again.
+      const sampleNames = new Set(SAMPLE_TESTIMONIALS.flatMap((t) => [t.name, `Sample — ${t.name}`]));
+      const old = (await store.listTestimonials()).filter((t) => sampleNames.has(t.name));
+      for (const t of old) await store.deleteTestimonial(t.id);
+      if (old.length) console.log(`  ✓ ${old.length} old sample testimonials removed`);
+    }
+    if ((await store.countTestimonials()) === 0) {
+      const active = flag('show-samples');
+      for (const { photo, ...t } of SAMPLE_TESTIMONIALS) {
+        const data = await fs.readFile(new URL(`${photo}.png`, SAMPLE_DIR)).catch(() => null);
+        await store.addTestimonial({ ...t, active, image: data ? { data, type: 'image/png' } : undefined });
+      }
+      console.log(active
+        ? `  ✓ ${SAMPLE_TESTIMONIALS.length} sample testimonials added and shown on the website (replace them with real reviews before going live)`
+        : `  ✓ ${SAMPLE_TESTIMONIALS.length} sample testimonials added as inactive (--show-samples to show them; edit and switch on in Admin → Testimonials)`);
+    } else {
+      console.log('  • Testimonials already exist — samples skipped (--reset-samples to replace the samples)');
     }
   }
 

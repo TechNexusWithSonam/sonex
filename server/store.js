@@ -42,6 +42,22 @@ const SCHEMA = [
      KEY idx_created (created_at),
      KEY idx_status (status)
    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+  `CREATE TABLE IF NOT EXISTS sonex_testimonials (
+     id CHAR(36) NOT NULL PRIMARY KEY,
+     name VARCHAR(100) NOT NULL,
+     designation VARCHAR(100) NOT NULL DEFAULT '',
+     company VARCHAR(100) NOT NULL DEFAULT '',
+     rating TINYINT UNSIGNED NOT NULL DEFAULT 5,
+     review TEXT NOT NULL,
+     is_active TINYINT(1) NOT NULL DEFAULT 1,
+     sort_order INT NOT NULL DEFAULT 0,
+     image MEDIUMBLOB NULL,
+     image_type VARCHAR(20) NULL,
+     image_v INT UNSIGNED NOT NULL DEFAULT 0,
+     created_at DATETIME NOT NULL,
+     updated_at DATETIME NULL,
+     KEY idx_active_sort (is_active, sort_order)
+   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 ];
 
 export async function init() {
@@ -159,4 +175,95 @@ export async function updateEnquiry(id, { status, notes }) {
 export async function deleteEnquiry(id) {
   const [res] = await pool.query('DELETE FROM sonex_enquiries WHERE id = ?', [id]);
   return res.affectedRows > 0;
+}
+
+/* ---------- testimonials ---------- */
+// The photo is stored in the row (MEDIUMBLOB) so it survives redeploys; it is served by its own
+// versioned URL, and the image column is never selected for list queries.
+const T_COLS = 'id, name, designation, company, rating, review, is_active, sort_order, image_type, image_v, created_at, updated_at';
+const toIso = (d) => (d ? d.replace(' ', 'T') + 'Z' : null);
+
+const toTestimonial = (r) => ({
+  id: r.id,
+  name: r.name,
+  designation: r.designation,
+  company: r.company,
+  rating: r.rating,
+  review: r.review,
+  active: !!r.is_active,
+  order: r.sort_order,
+  image: r.image_type ? `/api/testimonials/${r.id}/image?v=${r.image_v}` : '',
+  createdAt: toIso(r.created_at),
+  updatedAt: toIso(r.updated_at),
+});
+
+export async function listTestimonials({ activeOnly = false } = {}) {
+  const [rows] = await pool.query(
+    `SELECT ${T_COLS} FROM sonex_testimonials ${activeOnly ? 'WHERE is_active = 1' : ''} ORDER BY sort_order, created_at`
+  );
+  return rows.map(toTestimonial);
+}
+
+export async function getTestimonial(id) {
+  const [[row]] = await pool.query(`SELECT ${T_COLS} FROM sonex_testimonials WHERE id = ?`, [id]);
+  return row ? toTestimonial(row) : null;
+}
+
+export const countTestimonials = async () => (await pool.query('SELECT COUNT(*) AS n FROM sonex_testimonials'))[0][0].n;
+
+/** `t.image`: { data: Buffer, type } to set a photo; omitted for none. */
+export async function addTestimonial(t) {
+  const id = crypto.randomUUID();
+  const [[{ next }]] = await pool.query('SELECT COALESCE(MAX(sort_order), 0) + 1 AS next FROM sonex_testimonials');
+  await pool.query(
+    `INSERT INTO sonex_testimonials (id, name, designation, company, rating, review, is_active, sort_order, image, image_type, image_v, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())`,
+    [id, t.name, t.designation, t.company, t.rating, t.review, t.active ? 1 : 0, next,
+      t.image?.data || null, t.image?.type || null, t.image ? 1 : 0]
+  );
+  return getTestimonial(id);
+}
+
+/**
+ * Updates only the fields that are present.
+ * `image`: undefined = keep, null = remove, { data, type } = replace.
+ */
+export async function updateTestimonial(id, t) {
+  const sets = [];
+  const params = [];
+  const fields = { name: 'name', designation: 'designation', company: 'company', rating: 'rating', review: 'review' };
+  for (const [key, col] of Object.entries(fields)) {
+    if (t[key] !== undefined) { sets.push(`${col} = ?`); params.push(t[key]); }
+  }
+  if (t.active !== undefined) { sets.push('is_active = ?'); params.push(t.active ? 1 : 0); }
+  if (t.image === null) sets.push('image = NULL, image_type = NULL');
+  else if (t.image) { sets.push('image = ?, image_type = ?, image_v = image_v + 1'); params.push(t.image.data, t.image.type); }
+  sets.push('updated_at = UTC_TIMESTAMP()');
+  const [res] = await pool.query(`UPDATE sonex_testimonials SET ${sets.join(', ')} WHERE id = ?`, [...params, id]);
+  return res.affectedRows ? getTestimonial(id) : null;
+}
+
+export async function deleteTestimonial(id) {
+  const [res] = await pool.query('DELETE FROM sonex_testimonials WHERE id = ?', [id]);
+  return res.affectedRows > 0;
+}
+
+/** Sets the display order from a list of ids (first = shown first). Unknown ids are ignored. */
+export async function reorderTestimonials(ids) {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    for (const [i, id] of ids.entries()) await conn.query('UPDATE sonex_testimonials SET sort_order = ? WHERE id = ?', [i + 1, id]);
+    await conn.commit();
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+}
+
+export async function getTestimonialImage(id) {
+  const [[row]] = await pool.query('SELECT image, image_type, is_active FROM sonex_testimonials WHERE id = ?', [id]);
+  return row?.image ? { data: row.image, type: row.image_type, active: !!row.is_active } : null;
 }

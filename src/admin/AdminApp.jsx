@@ -5,6 +5,7 @@ import { ListEditor, ObjectEditor, PageHeader } from './Editors';
 import Dashboard from './Dashboard';
 import Enquiries from './Enquiries';
 import Settings from './Settings';
+import Testimonials from './Testimonials';
 import Icon from '../components/Icon';
 import { mergeContent } from '../data/site';
 import './admin.css';
@@ -17,6 +18,7 @@ const PAGES = [
   { id: 'services', label: 'Services', icon: 'code' },
   { id: 'projects', label: 'Projects', icon: 'box' },
   { id: 'pricing', label: 'Pricing', icon: 'receipt' },
+  { id: 'testimonials', label: 'Testimonials', icon: 'star' },
   { id: 'contact', label: 'Contact Page', icon: 'call' },
   { id: 'stats', label: 'Stats', icon: 'spark' },
   { id: 'values', label: 'Why Choose Us', icon: 'check' },
@@ -218,6 +220,9 @@ export default function AdminApp() {
             <ObjectEditor section="seo" schema={OBJECT_SCHEMAS.seo} data={content.seo} {...editorProps} />
           </>
         );
+        break;
+      case 'testimonials':
+        body = <Testimonials toast={toast} />;
         break;
       case 'settings':
         body = <Settings user={user} setUser={setUser} toast={toast} />;

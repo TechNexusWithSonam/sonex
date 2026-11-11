@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { NAV_LINKS } from '../data/site';
 import { useCompany } from '../content/ContentContext';
-import { scrollToSection, telLink } from '../utils/links';
-import { useActiveSection } from '../hooks/useReveal';
+import { telLink } from '../utils/links';
+import { linkClick, usePathname } from '../utils/router';
 import Icon from './Icon';
 
-const IDS = NAV_LINKS.map((l) => l.id);
+/** The menu item for a URL — "/projects/stockpilot" belongs to Projects. */
+const activeId = (path) =>
+  NAV_LINKS.find((l) => l.path !== '/' && (path === l.path || path.startsWith(`${l.path}/`)))?.id ?? (path === '/' ? 'home' : null);
 
 export function Logo() {
   const COMPANY = useCompany();
@@ -25,8 +27,7 @@ export default function Navbar() {
   const tel = telLink(COMPANY);
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [active, setActive] = useState('home');
-  useActiveSection(IDS, setActive);
+  const active = activeId(usePathname());
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -42,16 +43,15 @@ export default function Navbar() {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
-  const go = (e, id) => {
-    e.preventDefault();
+  const go = (e) => {
     setOpen(false);
-    scrollToSection(id);
+    linkClick(e);
   };
 
   return (
     <header className={`nav ${scrolled ? 'nav--scrolled' : ''}`}>
       <div className="container nav__inner">
-        <a href="#home" onClick={(e) => go(e, 'home')} aria-label={`${COMPANY.fullName} — home`}>
+        <a href="/" onClick={go} aria-label={`${COMPANY.fullName} — home`}>
           <Logo />
         </a>
 
@@ -60,10 +60,10 @@ export default function Navbar() {
             {NAV_LINKS.map((l) => (
               <li key={l.id}>
                 <a
-                  href={`#${l.id}`}
-                  onClick={(e) => go(e, l.id)}
+                  href={l.path}
+                  onClick={go}
                   className={active === l.id ? 'is-active' : ''}
-                  aria-current={active === l.id ? 'true' : undefined}
+                  aria-current={active === l.id ? 'page' : undefined}
                 >
                   {l.label}
                 </a>
@@ -74,7 +74,7 @@ export default function Navbar() {
             <a className="btn btn--outline" href={tel}>
               <Icon name="call" size={18} /> Call {COMPANY.phoneDisplay}
             </a>
-            <a className="btn btn--gold" href="#contact" onClick={(e) => go(e, 'contact')}>
+            <a className="btn btn--gold" href="/contact" onClick={go}>
               Get a Free Quote
             </a>
           </div>
@@ -85,7 +85,7 @@ export default function Navbar() {
             <Icon name="call" size={18} />
             <span>{COMPANY.phoneDisplay}</span>
           </a>
-          <a className="btn btn--gold btn--sm nav__quote" href="#contact" onClick={(e) => go(e, 'contact')}>
+          <a className="btn btn--gold btn--sm nav__quote" href="/contact" onClick={go}>
             Free Quote
           </a>
           <button

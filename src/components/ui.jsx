@@ -1,5 +1,5 @@
 import Icon, { WhatsAppIcon } from './Icon';
-import { telLink, whatsappLink, scrollToSection } from '../utils/links';
+import { telLink, whatsappLink, goToPage } from '../utils/links';
 import { useCompany } from '../content/ContentContext';
 
 /** Shared button. Renders <a> when href is given, otherwise <button>. */
@@ -30,7 +30,7 @@ export function CallNowButton({ variant = 'outline', label = 'Call Now' }) {
 }
 
 export const QuoteButton = ({ variant = 'gold', label = 'Get a Free Quote' }) => (
-  <Button variant={variant} onClick={() => scrollToSection('contact')}>
+  <Button variant={variant} onClick={() => goToPage('contact')}>
     {label} <Icon name="arrow" size={18} />
   </Button>
 );

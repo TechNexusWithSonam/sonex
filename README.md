@@ -3,7 +3,7 @@
 React (Vite) website with a Node.js/Express API and MySQL database.
 
 - Website: `/`
-- Admin panel: `/admin`. From it you can edit services, projects, pricing, stats, home/about text, company details, the launch offer and budget options, and view and manage enquiries.
+- Admin panel: `/admin`. From it you can edit services, projects, pricing, stats, home/about text, company details, the launch offer and budget options, manage customer testimonials (photo, rating, active/inactive), and view and manage enquiries.
 
 ## Local development (WAMP)
 
@@ -27,7 +27,9 @@ On first start, the tables are created automatically.
 npm run seed                                   # local DB: content, admin login (new strong password), sample enquiries
 npm run seed -- --user admin --password "MyPass@123"   # choose your own login
 npm run seed -- --reset-content                # also overwrite site content with defaults
-npm run seed -- --no-demo                      # skip sample enquiries
+npm run seed -- --no-demo                      # skip sample enquiries and sample testimonials
+npm run seed -- --show-samples                 # sample testimonials (with avatars) shown on the site — for previews/demos only
+npm run seed -- --reset-samples --show-samples # replace previously seeded sample testimonials
 npm run seed:live                              # same, on the live Hostinger DB (.env.live)
 ```
 

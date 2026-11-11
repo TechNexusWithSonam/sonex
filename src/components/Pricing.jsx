@@ -1,7 +1,7 @@
 import { useContent, useTexts } from '../content/ContentContext';
 import { SectionHeading, Button } from './ui';
 import Icon from './Icon';
-import { formatINR, discounted, whatsappLink, scrollToSection } from '../utils/links';
+import { formatINR, discounted, whatsappLink, goToPage } from '../utils/links';
 
 export default function Pricing() {
   const { plans: PLANS, company: COMPANY } = useContent();
@@ -54,7 +54,7 @@ export default function Pricing() {
                 </ul>
 
                 <div className="plan__actions">
-                  <Button variant={plan.featured ? 'gold' : 'outline'} onClick={() => scrollToSection('contact')}>
+                  <Button variant={plan.featured ? 'gold' : 'outline'} onClick={() => goToPage('contact')}>
                     Get a Free Quote
                   </Button>
                   <a

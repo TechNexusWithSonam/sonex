@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
-/** Adds `is-visible` to every `.reveal` element when it scrolls into view. */
-export function useReveal() {
+/** Adds `is-visible` to every `.reveal` element when it scrolls into view. Re-runs when `key` changes (new page). */
+export function useReveal(key) {
   useEffect(() => {
     const els = document.querySelectorAll('.reveal');
     if (!('IntersectionObserver' in window)) {
@@ -20,23 +20,5 @@ export function useReveal() {
     );
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
-  }, []);
-}
-
-/** Returns the id of the section currently in view, for nav highlighting. */
-export function useActiveSection(ids, setActive) {
-  useEffect(() => {
-    const io = new IntersectionObserver(
-      (entries) =>
-        entries.forEach((e) => {
-          if (e.isIntersecting) setActive(e.target.id);
-        }),
-      { rootMargin: '-45% 0px -50% 0px' }
-    );
-    ids.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) io.observe(el);
-    });
-    return () => io.disconnect();
-  }, [ids, setActive]);
+  }, [key]);
 }
