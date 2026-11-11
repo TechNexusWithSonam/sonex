@@ -560,3 +560,5 @@ p { margin: 0 0 1rem; }
 .boot { min-height: 100vh; background: var(--black); }
 .footer__social { display: flex !important; flex-wrap: wrap; gap: 0.5rem 1rem !important; margin-top: 1.2rem; }
 .footer__social a { color: var(--gold-light); font-weight: 700; font-size: 0.9rem; }
+.contact__map { display: block; margin-top: 0.2rem; font-size: 0.9rem !important; color: var(--gold-deep); }
+.form-success__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; }

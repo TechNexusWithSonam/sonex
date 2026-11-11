@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, setUnauthorizedHandler } from './api';
-import { LIST_SCHEMAS, OBJECT_SCHEMAS, TEXT_GROUPS } from './schemas';
+import { LIST_SCHEMAS, OBJECT_SCHEMAS, TEXT_GROUPS, CONTACT_GROUPS } from './schemas';
 import { ListEditor, ObjectEditor, PageHeader } from './Editors';
 import Dashboard from './Dashboard';
 import Enquiries from './Enquiries';
@@ -17,6 +17,7 @@ const PAGES = [
   { id: 'services', label: 'Services', icon: 'code' },
   { id: 'projects', label: 'Projects', icon: 'box' },
   { id: 'pricing', label: 'Pricing', icon: 'receipt' },
+  { id: 'contact', label: 'Contact Page', icon: 'call' },
   { id: 'stats', label: 'Stats', icon: 'spark' },
   { id: 'values', label: 'Why Choose Us', icon: 'check' },
   { id: 'company', label: 'Company & Offer', icon: 'shield' },
@@ -176,11 +177,10 @@ export default function AdminApp() {
       case 'company':
         body = (
           <>
-            <PageHeader title="Company & Offer" description="Contact details used across the site, and the launch discount." />
+            <PageHeader title="Company & Offer" description="Company name, tagline, launch discount and social media links." />
             <div className="a-stack">
               <ObjectEditor section="company" schema={OBJECT_SCHEMAS.company} data={content.company} {...editorProps} />
               <ObjectEditor section="company" schema={OBJECT_SCHEMAS.social} data={content.company} {...editorProps} />
-              <ObjectEditor section="budgets" schema={OBJECT_SCHEMAS.budgets} data={content.budgets} {...editorProps} />
             </div>
           </>
         );
@@ -193,6 +193,20 @@ export default function AdminApp() {
               {TEXT_GROUPS.map((g) => (
                 <ObjectEditor key={g.title} section="texts" schema={g} data={content.texts} {...editorProps} />
               ))}
+            </div>
+          </>
+        );
+        break;
+      case 'contact':
+        body = (
+          <>
+            <PageHeader title="Contact Page" description="Everything in the Contact section of the website: details, texts, form fields and messages. {phone}, {name} and {discount} are filled in automatically." />
+            <div className="a-stack">
+              <ObjectEditor section="company" schema={OBJECT_SCHEMAS.contactDetails} data={content.company} {...editorProps} />
+              {CONTACT_GROUPS.map((g) => (
+                <ObjectEditor key={g.title} section="texts" schema={g} data={content.texts} {...editorProps} />
+              ))}
+              <ObjectEditor section="budgets" schema={OBJECT_SCHEMAS.budgets} data={content.budgets} {...editorProps} />
             </div>
           </>
         );

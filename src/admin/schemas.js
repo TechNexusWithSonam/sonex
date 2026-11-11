@@ -93,13 +93,19 @@ export const OBJECT_SCHEMAS = {
       { name: 'fullName', label: 'Full company name', type: 'text', required: true },
       { name: 'tagline', label: 'Tagline', type: 'text' },
       { name: 'launchDiscount', label: 'Launch discount (%)', type: 'number', min: 0, max: 90, hint: 'Set 0 to switch the offer off everywhere' },
-      { name: 'phoneDisplay', label: 'Phone (as displayed)', type: 'text', hint: 'e.g. +91 73987 48936' },
-      { name: 'phone', label: 'Phone (10 digits)', type: 'text' },
-      { name: 'phoneIntl', label: 'WhatsApp / call number with country code', type: 'text', required: true, hint: 'Digits only, e.g. 917398748936' },
-      { name: 'email', label: 'Email', type: 'text' },
-      { name: 'hours', label: 'Business hours', type: 'text' },
-      { name: 'location', label: 'Location', type: 'text' },
       { name: 'logoSubtitle', label: 'Logo subtitle', type: 'text', hint: 'Small text under the logo name' },
+    ],
+  },
+  contactDetails: {
+    title: 'Contact details',
+    fields: [
+      { name: 'phoneDisplay', label: 'Phone (as displayed)', type: 'text', required: true, hint: 'e.g. +91 73987 48936' },
+      { name: 'phone', label: 'Phone (10 digits)', type: 'text' },
+      { name: 'phoneIntl', label: 'WhatsApp / call number with country code', type: 'text', required: true, hint: 'Digits only, e.g. 917398748936 — used for Call and WhatsApp buttons everywhere' },
+      { name: 'email', label: 'Email', type: 'text', hint: 'Leave empty to hide email everywhere' },
+      { name: 'hours', label: 'Business hours', type: 'text', hint: 'Leave empty to hide' },
+      { name: 'location', label: 'Location / address', type: 'text', hint: 'Leave empty to hide' },
+      { name: 'mapUrl', label: 'Google Maps link', type: 'text', hint: 'Optional — shows a “Get directions” link. Must start with https://' },
     ],
   },
   social: {
@@ -140,7 +146,7 @@ export const OBJECT_SCHEMAS = {
     ],
   },
   budgets: {
-    title: 'Contact form — budget options',
+    title: 'Form — budget options',
     toForm: (arr) => ({ items: arr }),
     fromForm: (f) => f.items,
     fields: [{ name: 'items', label: 'Budget options', type: 'lines', required: true, hint: 'One option per line' }],
@@ -170,15 +176,57 @@ export const TEXT_GROUPS = [
     ],
   },
   { title: 'Call-to-action banner', fields: [t('ctaTitle', 'Heading'), t('ctaAccentOffer', 'Offer text (shown when offer is on)', 'text', PLACEHOLDER_HINT), t('ctaText', 'Sub text')] },
+  { title: 'Footer', fields: [t('footerText', 'Footer description', 'textarea')] },
+];
+
+// Everything in the #contact section, edited on the "Contact Page" admin screen (stored in "texts").
+const check = (name, label) => ({ name, label, type: 'checkbox' });
+export const CONTACT_GROUPS = [
   {
-    title: 'Contact section',
+    title: 'Section heading',
     fields: [
       t('contactEyebrow', 'Small label above heading'), t('contactTitle', 'Heading'), t('contactAccent', 'Heading — gold part'),
-      t('contactText', 'Intro text', 'textarea'), t('enquiryTitle', 'Enquiry box title'), t('enquiryText', 'Enquiry box text', 'textarea'),
-      t('formTitle', 'Form title'), t('formButton', 'Form button text'), t('successTitle', 'Thank-you title'),
+      t('contactText', 'Intro text', 'textarea'),
     ],
   },
-  { title: 'Footer', fields: [t('footerText', 'Footer description', 'textarea')] },
+  {
+    title: 'Contact info labels',
+    fields: [
+      t('labelCall', 'Phone label'), t('labelWhatsApp', 'WhatsApp label'), t('labelEmail', 'Email label'),
+      t('labelHours', 'Business hours label'), t('labelLocation', 'Location label'), t('directionsText', 'Map link text'),
+    ],
+  },
+  { title: 'Business enquiry box', fields: [t('enquiryTitle', 'Title', 'text', 'Leave both empty to hide the box'), t('enquiryText', 'Text', 'textarea')] },
+  {
+    title: 'Form — settings',
+    fields: [check('showEmailField', 'Show the Email field'), check('requireEmail', 'Make Email required'), check('showBudgetField', 'Show the Budget field')],
+  },
+  {
+    title: 'Form — labels & placeholders',
+    fields: [
+      t('formTitle', 'Form title'), t('formRequiredNote', 'Required-fields note', 'text', 'Leave empty to hide'),
+      t('fieldName', 'Name label'), t('fieldNamePlaceholder', 'Name placeholder'),
+      t('fieldPhone', 'Phone label'), t('fieldPhonePlaceholder', 'Phone placeholder'),
+      t('fieldEmail', 'Email label'), t('fieldEmailPlaceholder', 'Email placeholder'),
+      t('fieldService', 'Service label'), t('fieldServicePlaceholder', 'Service placeholder'),
+      t('fieldServiceOther', 'Extra service option', 'text', 'e.g. “Other / Not sure”. Leave empty to hide'),
+      t('fieldBudget', 'Budget label'), t('fieldBudgetPlaceholder', 'Budget placeholder'),
+      t('fieldMessage', 'Message label'), t('fieldMessagePlaceholder', 'Message placeholder'),
+      t('formButton', 'Submit button text'),
+      t('formAltText', '“Prefer talking?” text'), t('formAltCall', 'Call link text'), t('formAltEmail', 'Email link text'),
+    ],
+  },
+  {
+    title: 'After submit',
+    fields: [
+      t('successTitle', 'Thank-you title'), t('successText', 'Thank-you message', 'textarea', '{phone} is replaced with your phone number'),
+      t('successButton', '“Send another” button'), t('whatsappHeader', 'WhatsApp message first line', 'text', '{name} is replaced with the company name'),
+    ],
+  },
+  {
+    title: 'Form — error messages',
+    fields: [t('errName', 'Name missing'), t('errPhone', 'Invalid phone'), t('errEmail', 'Invalid / missing email'), t('errService', 'No service chosen'), t('errMessage', 'Message too short')],
+  },
 ];
 
 /** Returns { fieldName: message } for missing required fields. */

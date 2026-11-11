@@ -5,27 +5,27 @@ import Icon, { WhatsAppIcon } from './Icon';
 import { telLink, mailLink, whatsappLink } from '../utils/links';
 
 const INITIAL = { name: '', phone: '', email: '', service: '', budget: '', message: '', website: '' };
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-function validate(v) {
+function validate(v, t, opts) {
   const e = {};
-  if (v.name.trim().length < 2) e.name = 'Please enter your name.';
-  const digits = v.phone.replace(/\D/g, '');
-  if (!/^(91)?[6-9]\d{9}$/.test(digits)) e.phone = 'Enter a valid 10-digit mobile number.';
-  if (v.email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.email.trim())) e.email = 'Enter a valid email address.';
-  if (!v.service) e.service = 'Please choose a service.';
-  if (v.message.trim().length < 10) e.message = 'Tell us a little more (at least 10 characters).';
+  if (v.name.trim().length < 2) e.name = t('errName');
+  if (!/^(91)?[6-9]\d{9}$/.test(v.phone.replace(/\D/g, ''))) e.phone = t('errPhone');
+  if (opts.showEmail && ((opts.requireEmail && !v.email.trim()) || (v.email && !EMAIL_RE.test(v.email.trim())))) e.email = t('errEmail');
+  if (!v.service) e.service = t('errService');
+  if (v.message.trim().length < 10) e.message = t('errMessage');
   return e;
 }
 
-function buildMessage(v, companyName) {
+function buildMessage(v, header, t) {
   return [
-    `*New Enquiry — ${companyName} Website*`,
-    `Name: ${v.name.trim()}`,
-    `Phone: ${v.phone.trim()}`,
-    v.email && `Email: ${v.email.trim()}`,
-    `Service: ${v.service}`,
-    v.budget && `Budget: ${v.budget}`,
-    `Message: ${v.message.trim()}`,
+    `*${header}*`,
+    `${t('fieldName')}: ${v.name.trim()}`,
+    `${t('fieldPhone')}: ${v.phone.trim()}`,
+    v.email && `${t('fieldEmail')}: ${v.email.trim()}`,
+    `${t('fieldService')}: ${v.service}`,
+    v.budget && `${t('fieldBudget')}: ${v.budget}`,
+    `${t('fieldMessage')}: ${v.message.trim()}`,
   ]
     .filter(Boolean)
     .join('\n');
@@ -45,9 +45,27 @@ function Field({ id, label, error, required, children }) {
   );
 }
 
+function InfoItem({ icon, label, children }) {
+  return (
+    <li>
+      {icon}
+      <div>
+        <small>{label}</small>
+        {children}
+      </div>
+    </li>
+  );
+}
+
 export default function Contact() {
-  const { company: COMPANY, services, budgets } = useContent();
+  const { company: COMPANY, services, budgets, texts } = useContent();
   const t = useTexts();
+  const opts = {
+    showEmail: texts.showEmailField !== false,
+    showBudget: texts.showBudgetField !== false && budgets.length > 0,
+    requireEmail: texts.showEmailField !== false && !!texts.requireEmail,
+  };
+
   const [values, setValues] = useState(INITIAL);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -56,16 +74,16 @@ export default function Contact() {
   const onChange = (e) => {
     const next = { ...values, [e.target.name]: e.target.value };
     setValues(next);
-    if (touched[e.target.name]) setErrors(validate(next));
+    if (touched[e.target.name]) setErrors(validate(next, t, opts));
   };
   const onBlur = (e) => {
-    setTouched((t) => ({ ...t, [e.target.name]: true }));
-    setErrors(validate(values));
+    setTouched((s) => ({ ...s, [e.target.name]: true }));
+    setErrors(validate(values, t, opts));
   };
 
   const onSubmit = (e) => {
     e.preventDefault();
-    const errs = validate(values);
+    const errs = validate(values, t, opts);
     setErrors(errs);
     setTouched(Object.keys(INITIAL).reduce((a, k) => ({ ...a, [k]: true }), {}));
     if (Object.keys(errs).length) {
@@ -80,7 +98,7 @@ export default function Contact() {
       body: JSON.stringify(values),
       keepalive: true,
     }).catch(() => {});
-    window.open(whatsappLink(COMPANY, buildMessage(values, COMPANY.name)), '_blank', 'noopener');
+    window.open(whatsappLink(COMPANY, buildMessage(values, t('whatsappHeader'), t)), '_blank', 'noopener');
     setSent(true);
     setValues(INITIAL);
     setTouched({});
@@ -97,6 +115,7 @@ export default function Contact() {
   });
   const err = (name) => (touched[name] ? errors[name] : '');
   const tel = telLink(COMPANY);
+  const mapUrl = /^https?:\/\//.test(COMPANY.mapUrl || '') ? COMPANY.mapUrl : '';
 
   return (
     <section id="contact" className="section" aria-labelledby="contact-title">
@@ -112,53 +131,40 @@ export default function Contact() {
           />
 
           <ul className="contact__list reveal">
-            <li>
-              <span className="icon-badge"><Icon name="call" /></span>
-              <div>
-                <small>Call us</small>
-                <a href={tel}>{COMPANY.phoneDisplay}</a>
-              </div>
-            </li>
-            <li>
-              <span className="icon-badge icon-badge--wa"><WhatsAppIcon /></span>
-              <div>
-                <small>WhatsApp</small>
-                <a href={whatsappLink(COMPANY)} target="_blank" rel="noopener noreferrer">{COMPANY.phoneDisplay}</a>
-              </div>
-            </li>
+            <InfoItem icon={<span className="icon-badge"><Icon name="call" /></span>} label={t('labelCall')}>
+              <a href={tel}>{COMPANY.phoneDisplay}</a>
+            </InfoItem>
+            <InfoItem icon={<span className="icon-badge icon-badge--wa"><WhatsAppIcon /></span>} label={t('labelWhatsApp')}>
+              <a href={whatsappLink(COMPANY)} target="_blank" rel="noopener noreferrer">{COMPANY.phoneDisplay}</a>
+            </InfoItem>
             {COMPANY.email && (
-              <li>
-                <span className="icon-badge"><Icon name="mail" /></span>
-                <div>
-                  <small>Email</small>
-                  <a href={mailLink(COMPANY)}>{COMPANY.email}</a>
-                </div>
-              </li>
+              <InfoItem icon={<span className="icon-badge"><Icon name="mail" /></span>} label={t('labelEmail')}>
+                <a href={mailLink(COMPANY)}>{COMPANY.email}</a>
+              </InfoItem>
             )}
             {COMPANY.hours && (
-              <li>
-                <span className="icon-badge"><Icon name="clock" /></span>
-                <div>
-                  <small>Business hours</small>
-                  <span>{COMPANY.hours}</span>
-                </div>
-              </li>
+              <InfoItem icon={<span className="icon-badge"><Icon name="clock" /></span>} label={t('labelHours')}>
+                <span>{COMPANY.hours}</span>
+              </InfoItem>
             )}
-            {COMPANY.location && (
-              <li>
-                <span className="icon-badge"><Icon name="pin" /></span>
-                <div>
-                  <small>Location</small>
-                  <span>{COMPANY.location}</span>
-                </div>
-              </li>
+            {(COMPANY.location || mapUrl) && (
+              <InfoItem icon={<span className="icon-badge"><Icon name="pin" /></span>} label={t('labelLocation')}>
+                {COMPANY.location && <span>{COMPANY.location}</span>}
+                {mapUrl && (
+                  <a className="contact__map" href={mapUrl} target="_blank" rel="noopener noreferrer">
+                    {t('directionsText')} →
+                  </a>
+                )}
+              </InfoItem>
             )}
           </ul>
 
-          <div className="enquiry-box reveal">
-            <h3>{t('enquiryTitle')}</h3>
-            <p>{t('enquiryText')}</p>
-          </div>
+          {(texts.enquiryTitle || texts.enquiryText) && (
+            <div className="enquiry-box reveal">
+              {texts.enquiryTitle && <h3>{t('enquiryTitle')}</h3>}
+              {texts.enquiryText && <p>{t('enquiryText')}</p>}
+            </div>
+          )}
         </div>
 
         <div className="contact__form-wrap reveal">
@@ -166,64 +172,68 @@ export default function Contact() {
             <div className="form-success" role="status">
               <span className="icon-badge"><Icon name="check" /></span>
               <h3>{t('successTitle')}</h3>
-              <p>
-                We&apos;ve received your enquiry and opened it in WhatsApp — tap <strong>Send</strong> there for the
-                fastest reply. If WhatsApp did not open, call us on <a href={tel}>{COMPANY.phoneDisplay}</a>.
-              </p>
-              <button type="button" className="btn btn--outline" onClick={() => setSent(false)}>
-                Send another enquiry
-              </button>
+              <p>{t('successText')}</p>
+              <div className="form-success__actions">
+                <a className="btn btn--gold" href={tel}><Icon name="call" size={18} /> {t('formAltCall')}</a>
+                <button type="button" className="btn btn--outline" onClick={() => setSent(false)}>
+                  {t('successButton')}
+                </button>
+              </div>
             </div>
           ) : (
-            <form className="form" onSubmit={onSubmit} noValidate aria-label="Get a free quote">
+            <form className="form" onSubmit={onSubmit} noValidate aria-label={t('formTitle')}>
               <h3 className="form__title">{t('formTitle')}</h3>
-              <p className="form__sub">
-                Fields marked <span className="req">*</span> are required.
-              </p>
+              {texts.formRequiredNote && <p className="form__sub">{t('formRequiredNote')}</p>}
 
               {/* Honeypot: hidden from people, bots fill it in. */}
               <input type="text" name="website" value={values.website} onChange={onChange} className="hp" tabIndex={-1} autoComplete="off" aria-hidden="true" />
 
               <div className="form__row">
-                <Field id="name" label="Full name" required error={err('name')}>
-                  <input type="text" autoComplete="name" placeholder="Your name" {...props('name')} />
+                <Field id="name" label={t('fieldName')} required error={err('name')}>
+                  <input type="text" autoComplete="name" placeholder={t('fieldNamePlaceholder')} {...props('name')} />
                 </Field>
-                <Field id="phone" label="Phone / WhatsApp" required error={err('phone')}>
-                  <input type="tel" inputMode="tel" autoComplete="tel" placeholder="10-digit mobile" {...props('phone')} />
+                <Field id="phone" label={t('fieldPhone')} required error={err('phone')}>
+                  <input type="tel" inputMode="tel" autoComplete="tel" placeholder={t('fieldPhonePlaceholder')} {...props('phone')} />
                 </Field>
               </div>
 
-              <Field id="email" label="Email" error={err('email')}>
-                <input type="email" autoComplete="email" placeholder="you@company.com" {...props('email')} />
-              </Field>
+              {opts.showEmail && (
+                <Field id="email" label={t('fieldEmail')} required={opts.requireEmail} error={err('email')}>
+                  <input type="email" autoComplete="email" placeholder={t('fieldEmailPlaceholder')} {...props('email')} />
+                </Field>
+              )}
 
-              <div className="form__row">
-                <Field id="service" label="Service" required error={err('service')}>
+              <div className={opts.showBudget ? 'form__row' : undefined}>
+                <Field id="service" label={t('fieldService')} required error={err('service')}>
                   <select {...props('service')}>
-                    <option value="">Select a service</option>
+                    <option value="">{t('fieldServicePlaceholder')}</option>
                     {services.map((s, i) => <option key={`${s.title}-${i}`}>{s.title}</option>)}
-                    <option>Other / Not sure</option>
+                    {texts.fieldServiceOther && <option>{t('fieldServiceOther')}</option>}
                   </select>
                 </Field>
-                <Field id="budget" label="Budget" error={err('budget')}>
-                  <select {...props('budget')}>
-                    <option value="">Select budget</option>
-                    {budgets.map((b) => <option key={b}>{b}</option>)}
-                  </select>
-                </Field>
+                {opts.showBudget && (
+                  <Field id="budget" label={t('fieldBudget')} error={err('budget')}>
+                    <select {...props('budget')}>
+                      <option value="">{t('fieldBudgetPlaceholder')}</option>
+                      {budgets.map((b) => <option key={b}>{b}</option>)}
+                    </select>
+                  </Field>
+                )}
               </div>
 
-              <Field id="message" label="Project details" required error={err('message')}>
-                <textarea rows="4" placeholder="Tell us about your business and what you need…" {...props('message')} />
+              <Field id="message" label={t('fieldMessage')} required error={err('message')}>
+                <textarea rows="4" placeholder={t('fieldMessagePlaceholder')} {...props('message')} />
               </Field>
 
               <button type="submit" className="btn btn--gold btn--block">
                 <WhatsAppIcon size={18} /> {t('formButton')}
               </button>
-              <p className="form__alt">
-                Prefer talking? <a href={tel}>Call Now</a>
-                {COMPANY.email && <> · <a href={mailLink(COMPANY, 'Quote Request')}>Email us</a></>}
-              </p>
+              {(texts.formAltText || texts.formAltCall) && (
+                <p className="form__alt">
+                  {t('formAltText')} <a href={tel}>{t('formAltCall')}</a>
+                  {COMPANY.email && texts.formAltEmail && <> · <a href={mailLink(COMPANY, t('formTitle'))}>{t('formAltEmail')}</a></>}
+                </p>
+              )}
             </form>
           )}
         </div>

@@ -64,7 +64,7 @@ function sanitize(value, depth = 0) {
   if (Array.isArray(value)) return value.slice(0, 60).map((v) => sanitize(v, depth + 1));
   if (value && typeof value === 'object') {
     return Object.fromEntries(
-      Object.entries(value).slice(0, 40).filter(([k]) => /^[a-zA-Z0-9_]{1,40}$/.test(k)).map(([k, v]) => [k, sanitize(v, depth + 1)])
+      Object.entries(value).slice(0, 200).filter(([k]) => /^[a-zA-Z0-9_]{1,40}$/.test(k)).map(([k, v]) => [k, sanitize(v, depth + 1)])
     );
   }
   return null;
@@ -83,7 +83,7 @@ function validateSection(name, data) {
     if (data.phoneIntl.length < 10) return 'WhatsApp / international number must include the country code, e.g. 917398748936.';
     if (data.email && !EMAIL_RE.test(data.email)) return 'Email address looks invalid.';
     data.launchDiscount = Math.min(90, Math.max(0, Math.round(Number(data.launchDiscount) || 0)));
-    for (const k of ['instagram', 'facebook', 'linkedin', 'youtube']) {
+    for (const k of ['instagram', 'facebook', 'linkedin', 'youtube', 'mapUrl']) {
       if (data[k] && !/^https?:\/\/\S+$/.test(data[k])) return `${k} link must start with https://`;
     }
   }
@@ -128,6 +128,8 @@ app.post(
     if (!/^(91)?[6-9]\d{9}$/.test(e.phone.replace(/\D/g, ''))) return res.status(400).json({ error: 'Valid phone is required.' });
     if (e.email && !EMAIL_RE.test(e.email)) return res.status(400).json({ error: 'Email looks invalid.' });
     if (e.message.length < 10) return res.status(400).json({ error: 'Message is too short.' });
+    const { texts } = store.getContent();
+    if (texts.showEmailField !== false && texts.requireEmail && !e.email) return res.status(400).json({ error: 'Email is required.' });
     await store.addEnquiry(e);
     res.status(201).json({ ok: true });
   })
