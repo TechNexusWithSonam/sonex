@@ -1,0 +1,31 @@
+{
+  "name": "sonex-software-solutions",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c yellow,cyan \"node --watch-path=server server/index.js\" \"vite\"",
+    "dev:web": "vite",
+    "build": "vite build",
+    "start": "node server/index.js",
+    "preview": "npm run build && npm start",
+    "dev:live": "concurrently -k -n api,web -c red,cyan \"node server/index.js --env .env.live\" \"vite\"",
+    "seed": "node server/seed.js",
+    "seed:live": "node server/seed.js --env .env.live"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "mysql2": "^3.11.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.0",
+    "vite": "^5.4.11"
+  },
+  "overrides": {
+    "rollup": "npm:@rollup/wasm-node@^4.24.0",
+    "esbuild": "npm:esbuild-wasm@^0.21.5"
+  }
+}
